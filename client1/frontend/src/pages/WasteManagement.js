@@ -1,129 +1,3 @@
-// // // WasteManagement.js
-// // import React from 'react';
-// // import './WasteManagement.css';
-
-// // const WasteManagement = () => {
-// //   return (
-// //     <div className="container">
-// //       <div className="card d-flex flex-row">
-// //         {/* Left Side: Image */}
-// //         <div className="left-side">
-// //           <img
-// //             src="/assets/images/REPORTIMAGE.jpg"
-// //             alt="Waste Management"
-// //             className="image"
-// //           />
-// //         </div>
-
-// //         {/* Right Side: Form */}
-// //         <div className="right-side">
-// //           <h2>Report Waste</h2>
-// //           <form id="reportForm">
-// //             <div className="mb-3">
-// //               <label htmlFor="name" className="form-label">Name</label>
-// //               <input
-// //                 type="text"
-// //                 className="form-control"
-// //                 id="name"
-// //                 placeholder="Enter your name"
-// //                 required
-// //               />
-// //             </div>
-// //             <div className="mb-3">
-// //               <label htmlFor="email" className="form-label">Email</label>
-// //               <input
-// //                 type="email"
-// //                 className="form-control"
-// //                 id="email"
-// //                 placeholder="Enter your email"
-// //                 required
-// //               />
-// //             </div>
-// //             <div className="mb-3">
-// //               <label htmlFor="location" className="form-label">Location</label>
-// //               <input
-// //                 type="text"
-// //                 className="form-control"
-// //                 id="location"
-// //                 placeholder="Enter waste location"
-// //                 required
-// //               />
-// //             </div>
-// //             <div className="mb-3">
-// //               <label htmlFor="description" className="form-label">Description</label>
-// //               <textarea
-// //                 className="form-control"
-// //                 id="description"
-// //                 rows="4"
-// //                 placeholder="Describe the issue"
-// //                 required
-// //               ></textarea>
-// //             </div>
-// //             <div className="mb-3">
-// //               <label htmlFor="image" className="form-label">Upload Image</label>
-// //               <input type="file" className="form-control" id="image" required />
-// //             </div>
-// //             <button type="submit" className="btn btn-primary w-100">Submit</button>
-// //           </form>
-// //           <div id="successMessage" className="mt-3 text-success fw-bold" style={{ display: 'none' }}>
-// //             Your report has been successfully submitted!
-// //           </div>
-// //         </div>
-// //       </div>
-// //     </div>
-// //   );
-// // };
-
-// // export default WasteManagement;
-
-// import React from 'react';
-// import './WasteManagement.css';
-
-// const WasteManagement = () => {
-//   return (
-//     <div className="container">
-//       <div className="card d-flex flex-row">
-//         {/* Left Side: Image */}
-//         <div className="left-side">
-//           <img src="/assets/images/SAVECITY.png" alt="Waste Management" className="image" />
-//         </div>
-
-//         {/* Right Side: Form */}
-//         <div className="right-side">
-//           <h2>Report Waste</h2>
-//           <form id="reportForm">
-//             <div className="mb-3">
-//               <label htmlFor="name" className="form-label">Name</label>
-//               <input type="text" className="form-control" id="name" placeholder="Enter your name" required />
-//             </div>
-//             <div className="mb-3">
-//               <label htmlFor="email" className="form-label">Email</label>
-//               <input type="email" className="form-control" id="email" placeholder="Enter your email" required />
-//             </div>
-//             <div className="mb-3">
-//               <label htmlFor="location" className="form-label">Location</label>
-//               <input type="text" className="form-control" id="location" placeholder="Enter waste location" required />
-//             </div>
-//             <div className="mb-3">
-//               <label htmlFor="description" className="form-label">Description</label>
-//               <textarea className="form-control" id="description" rows="4" placeholder="Describe the issue" required></textarea>
-//             </div>
-//             <div className="mb-3">
-//               <label htmlFor="image" className="form-label">Upload Image</label>
-//               <input type="file" className="form-control" id="image" required />
-//             </div>
-//             <button type="submit" className="btn btn-primary w-100">Submit</button>
-//           </form>
-//           <div id="successMessage" className="mt-3 text-success fw-bold" style={{ display: 'none' }}>
-//             Your report has been successfully submitted!
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default WasteManagement;
 import React, { useState } from "react";
 import axios from "axios";
 import "./WasteManagement.css";
@@ -132,6 +6,7 @@ const WasteManagement = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    title: "",
     location: "",
     description: "",
     image: null,
@@ -141,11 +16,28 @@ const WasteManagement = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    // Validate the name field: no numbers and max 50 characters
+    if (name === "name" && !/^[A-Za-z\s]*$/.test(value)) {
+      return;
+    }
+    if (name === "name" && value.length > 50) {
+      return;
+    }
+
     setFormData({ ...formData, [name]: value });
   };
 
   const handleFileChange = (e) => {
-    setFormData({ ...formData, image: e.target.files[0] });
+    const file = e.target.files[0];
+
+    // Restrict file uploads to image types only
+    if (file && !file.type.startsWith("image/")) {
+      alert("Please upload only image files.");
+      return;
+    }
+
+    setFormData({ ...formData, image: file });
   };
 
   const handleSubmit = async (e) => {
@@ -156,9 +48,13 @@ const WasteManagement = () => {
     });
 
     try {
-      const response = await axios.post("/api/waste-reports/create", data, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const response = await axios.post(
+        "http://localhost:5000/api/waste-reports/create",
+        data,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
       setSuccessMessage(response.data.message || "Your report has been successfully submitted!");
     } catch (error) {
       console.error("Error submitting report:", error);
@@ -175,6 +71,7 @@ const WasteManagement = () => {
         <div className="right-side">
           <h2>Report Waste</h2>
           <form id="reportForm" onSubmit={handleSubmit}>
+            {/* Name Input */}
             <div className="mb-3">
               <label htmlFor="name" className="form-label">Name</label>
               <input
@@ -182,12 +79,14 @@ const WasteManagement = () => {
                 className="form-control"
                 id="name"
                 name="name"
-                placeholder="Enter your name"
+                placeholder="Enter your name (max 50 characters)"
                 value={formData.name}
                 onChange={handleInputChange}
                 required
               />
             </div>
+
+            {/* Email Input */}
             <div className="mb-3">
               <label htmlFor="email" className="form-label">Email</label>
               <input
@@ -201,19 +100,42 @@ const WasteManagement = () => {
                 required
               />
             </div>
+
+            {/* Title Input */}
             <div className="mb-3">
-              <label htmlFor="location" className="form-label">Location</label>
+              <label htmlFor="title" className="form-label">Title</label>
               <input
                 type="text"
                 className="form-control"
-                id="location"
-                name="location"
-                placeholder="Enter waste location"
-                value={formData.location}
+                id="title"
+                name="title"
+                placeholder="Enter a title for the report"
+                value={formData.title}
                 onChange={handleInputChange}
                 required
               />
             </div>
+
+            {/* Location Dropdown */}
+            <div className="mb-3">
+              <label htmlFor="location" className="form-label">Location</label>
+              <select
+                className="form-control"
+                id="location"
+                name="location"
+                value={formData.location}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="" disabled>
+                  Select a location
+                </option>
+                <option value="Hubli">Hubli</option>
+                <option value="Dharwad">Dharwad</option>
+              </select>
+            </div>
+
+            {/* Description Input */}
             <div className="mb-3">
               <label htmlFor="description" className="form-label">Description</label>
               <textarea
@@ -227,6 +149,8 @@ const WasteManagement = () => {
                 required
               ></textarea>
             </div>
+
+            {/* Image Upload */}
             <div className="mb-3">
               <label htmlFor="image" className="form-label">Upload Image</label>
               <input
@@ -238,10 +162,14 @@ const WasteManagement = () => {
                 required
               />
             </div>
+
+            {/* Submit Button */}
             <button type="submit" className="btn btn-primary w-100">Submit</button>
           </form>
+
+          {/* Success/Error Message */}
           {successMessage && (
-            <div id="successMessage" className="mt-3 text-success fw-bold">
+            <div className={`mt-3 fw-bold ${successMessage.includes("successfully") ? "text-success" : "text-danger"}`}>
               {successMessage}
             </div>
           )}
